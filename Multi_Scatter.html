@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+
+svg {
+  font: 12px cursive;
+} 
+
+.axis line {
+  stroke: rgb(255, 255, 255);
+}
+
+.axis path {
+  display: none;
+}
+
+.cell text {
+  fill: black;
+}
+
+.frame {
+  fill: none;
+  stroke: #aaa;
+}
+.graphs input {
+  float: left;
+}
+</style>
+<body>
+  <div class = "graphs">
+    <form action="http://127.0.0.1:5500/Lab3/bivariate.html">
+      <input type="submit" value="Bivariate" />
+  </form>
+    <form action="http://127.0.0.1:5500/Lab3/PCA_Plot.html">
+      <input type="submit" value="PCA" />
+</div>
+<script src="//d3js.org/d3.v4.min.js"></script>
+<script>
+
+var width = 1000,
+    size = 250,
+    padding = 15;
+
+var x = d3.scaleLinear()
+    .range([7, 243]);
+
+var y = d3.scaleLinear()
+    .range([243, 7]);
+
+var xAxis = d3.axisBottom()
+              .scale(x)
+              .ticks(5);
+
+var yAxis = d3.axisLeft()
+              .scale(y)
+              .ticks(5);
+
+d3.csv("data/big_scatter.csv", function(error, data) {
+  if (error) throw error;
+
+  var FeatureDomains = {},
+      features = d3.keys(data[0])
+
+
+  features.forEach(function(feature) {
+    FeatureDomains[feature] = d3.extent(data, function(d) { return +d[feature]; });
+  });
+
+  xAxis.tickSize(249 * 5);
+  yAxis.tickSize(-249 * 5);
+
+  var svg = d3.select("body").append("svg")
+      .attr("width", 250 * 5 + 20)
+      .attr("height", 250 * 5 + 20)
+      .append("g")
+      .attr("transform", "translate(" + padding + "," + padding / 2 + ")");
+
+  svg.selectAll(".x.axis")
+      .data(features)
+      .enter().append("g")
+      .attr("class", "x axis")
+      .attr("transform", function(d, i) { return "translate(" + (5 - i - 1) * size + ",0)"; })
+      .each(function(d) { x.domain(FeatureDomains[d]); d3.select(this).call(xAxis); });
+
+  svg.selectAll(".y.axis")
+      .data(features)
+      .enter().append("g")
+      .attr("class", "y axis")
+      .attr("transform", function(d, i) { return "translate(0," + i * 250 + ")"; })
+      .each(function(d) { y.domain(FeatureDomains[d]); d3.select(this).call(yAxis); });
+
+  var cell = svg.selectAll(".cell")
+      .data(cross(features, features))
+      .enter().append("g")
+      .attr("class", "cell")
+      .attr("transform", function(d) { return "translate(" + (5 - d.i - 1) * size + "," + d.j * size + ")"; })
+      .each(plot);
+
+  cell.filter(function(d) { return d.i === d.j; }).append("text")
+      .attr("x", 10)
+      .attr("y", 7)
+      .attr("dy", "1em")
+      .text(function(d) { return d.x; });
+
+  function plot(p) {
+    var cell = d3.select(this);
+
+    x.domain(FeatureDomains[p.x]);
+    y.domain(FeatureDomains[p.y]);
+
+    cell.append("rect")
+        .attr("class", "frame")
+        .attr("x", padding / 2)
+        .attr("y", padding / 2)
+        .attr("width", 240)
+        .attr("height", 240);
+
+    cell.selectAll("circle")
+        .data(data)
+        .enter().append("circle")
+        .attr("cx", function(d) { return x(d[p.x]); })
+        .attr("cy", function(d) { return y(d[p.y]); })
+        .attr("r", 2)
+        .transition()
+        .ease(d3.easeLinear)
+        .duration(2000)
+        .delay(function(d,i){return i;})
+        .style("fill", "red");
+  }
+});
+
+function cross(a, b) {
+  var c = [], length = a.length, m = b.length, i, j;
+  for (i = -1; ++i < length;) for (j = -1; ++j < m;) c.push({x: a[i], i: i, y: b[j], j: j});
+  return c;
+}
+
+</script>
+</body>
+</head>
+</html>

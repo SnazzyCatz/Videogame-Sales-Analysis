@@ -1,0 +1,241 @@
+<html>
+<head>
+  <style>
+  .graphs input {
+      float: left;
+    }
+
+</style>
+<link rel="stylesheet" type="text/css" href="/css/bivar.css">
+<script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+<body>
+    <div class = "graphs">
+        <form action="http://127.0.0.1:5500/Lab3/Multi_Scatter.html">
+          <input type="submit" value="Multiple Scatterplot" />
+      </form>
+        <form action="http://127.0.0.1:5500/Lab3/PCA_Plot.html">
+          <input type="submit" value="PCA" />
+    </div>
+  <div class='container'>
+  <div class='dots'>
+  <h> Bivariate Scatterplots</h>
+  <select id="list" onchange="updateData();">
+    <option value="NAx">NA Sales </option>
+    <option value="EUx">EU Sales </option>
+    <option value="JPx">JP Sales </option>
+    <option value="OTHx">Other Sales</option>
+    <option value="GLOx">Global Sales</option>
+  </select>
+  <select id="list2" onchange ="updateData();">
+    <option value="EUy">EU Sales </option>
+    <option value="NAy">NA Sales </option>
+    <option value="JPy">JP Sales </option>
+    <option value="OTHy">Other Sales</option>
+    <option value="GLOy">Global Sales</option>
+  </select>
+    <svg width="1500" height="750"></svg>
+    <script>
+        var svg = d3.select("svg"),
+            margin = 200,
+            width = svg.attr("width") - margin,
+            height = svg.attr("height") - margin;
+
+        var count = 0;
+
+        svg.append("text")
+           .attr("transform", "translate(300,0)")
+           .attr("x", 50)
+           .attr("y", 50)
+           .attr("font-size", "24px")
+           .text("Videogame Sales")
+
+        var x = d3.scaleLinear().range([0, width]);
+            y = d3.scaleLinear().range([height, 0]);
+
+        //var x_axis = d3.axisBottom().scale(x);
+
+        var g = svg.append("g")
+                .attr("transform", "translate(" + 100 + "," + 100 + ")");
+
+        var xAxis = g.append("g");
+        var yAxis = g.append("g");
+        var yText = g.append("g");
+        var xText = g.append("g");
+        console.log("hello")
+        d3.csv("data/tempData.csv", function(error, data) {
+            if (error) {
+                throw error;
+            }
+            console.log("hello")
+            x.domain([0, d3.max(data, function(d) { return +d.NA_Sales; })]);
+            y.domain([0, d3.max(data, function(d) { return +d.EU_Sales; })]);
+            //y.domain([0, 700]);
+
+            xAxis
+             .attr("transform", "translate(0," + height + ")")
+             .call(d3.axisBottom(x));
+
+
+            xText
+             .append("text")
+             .attr("class","word")
+             .attr("y", height + 50)
+             .attr("x", width/2)
+             .attr("text-anchor", "end")
+             .attr("stroke", "black")
+             .text("Total Sales in Millions");
+
+            yAxis
+             .call(d3.axisLeft(y).tickFormat(function(d){
+                 return  d;
+             }).ticks(10))
+             .append("text")
+             .attr("transform", "rotate(-90)")
+             .attr("y", 6)
+             .attr("dy", "-5.1em")
+             .attr("text-anchor", "end")
+             .attr("stroke", "black")
+             .text("Total Sales in Millions");
+
+             var dots = svg.selectAll(".dot")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("class","dot")
+                .attr("cx",function(d){ return x(d.NA_Sales)})
+                .attr("cy",function(d){return y(d.EU_Sales)})
+                .attr("transform","translate(115,"+90+")")
+                .transition()
+                .ease(d3.easeLinear)
+                .duration(2000)
+                .delay(function(d,i){return i * 2;})
+                .attr("fill","red")
+                .attr("r",5);
+        });
+
+        function updateData() {
+          var selectBox = document.getElementById("list");
+          var var1 = selectBox.options[selectBox.selectedIndex].value;
+          console.log(var1)
+          var selectBox = document.getElementById("list2");
+          var var2 = selectBox.options[selectBox.selectedIndex].value;
+          console.log(var2)
+          svg.selectAll(".dot").remove()
+
+          d3.csv("data/tempData.csv",function(error,data) {
+
+
+            svg.select(".x").transition().call(d3.axisBottom().scale(x));
+            //x.domain([0, d3.max(data, function(d) { return +d.NA_Sales; })]);
+
+            if(var1=="NAx") {x.domain([0, d3.max(data, function(d) { return +d.NA_Sales; })]);}
+            else if(var1=="EUx") {x.domain([0, d3.max(data, function(d) { return +d.EU_Sales; })]);}
+            else if(var1=="JPx") {x.domain([0, d3.max(data, function(d) { return +d.JP_Sales; })]);}
+            else if(var1=="OTHx") {x.domain([0, d3.max(data, function(d){return +d.Other_Sales})]);}
+            else if(var1=="GLOx") {x.domain([0, d3.max(data, function(d){return +d.Global_Sales})]);}
+            else (console.log("I dont know"));
+            console.log(d3.max(data, function(d) { return +d.JP_Sales; }))
+
+              if(var2=="NAy") {y.domain([0, d3.max(data, function(d) { return +d.NA_Sales; })]);}
+              else if(var2=="EUy") {y.domain([0, d3.max(data, function(d) { return +d.EU_Sales; })]);}
+              else if(var2=="JPy") {y.domain([0, d3.max(data, function(d) { return +d.JP_Sales; })]);}
+              else if(var2=="OTHy") {y.domain([0, d3.max(data, function(d){return +d.Other_Sales})]);}
+              else if(var2=="GLOy") {y.domain([0, d3.max(data, function(d) {return +d.Global_Sales})]);}
+              else (console.log("I dont know 2"));
+              console.log(d3.max(data, function(d) { return +d.JP_Sales; }))
+
+            //y.domain([0,1750]);
+
+            xAxis
+             .call(d3.axisBottom(x))
+
+
+            // TODO COME BACK HERE AND UNCOMMENT if(radioYear.checked) {svg.select(".word").text("Year")}
+            // TODO else if(radioGenre.checked) {svg.select(".word").text("Genre")}
+            // TODO else {svg.select(".word").text("Console")}
+            //svg.select(".word").text("genre")
+            //xText
+             //.append("text")
+             //.text("genre")
+
+            yAxis
+             .call(d3.axisLeft(y).tickFormat(function(d){return d;}).ticks(20))
+
+
+
+
+            /* var bars =svg.selectAll(".bar")
+               .data(data)
+               .enter()
+               .append("rect")
+               .attr("class","bar")
+               .attr("x",function(d){
+                 if(radioYear.checked) {return x(d.Year) + 100}
+                 else if(radioGenre.checked) {return x(d.Genre) + 100}
+                 else {return x(d.Console) + 100}
+               })
+               .attr("y",function(d){
+                 if(radioYear.checked) {return y(d.Years_Sales) + 100}
+                 //else if(radioGenre.checked) {return y(d.Genre_Sales - 127)}
+                 //else {return y(d.Console_Sales - 127)}
+                 else if(radioGenre.checked) {return y(d.Genre_Sales - 316)}
+                 else {return y(d.Console_Sales - 227)}
+               })
+               .attr("width", x.bandwidth())
+               .attr("height",function(d){
+                 if(radioYear.checked) {return height - y(d.Years_Sales)}
+                 else if(radioGenre.checked) {return height - y(d.Genre_Sales)}
+                 else {return height - y(d.Console_Sales)}
+               })
+               .attr("fill","orange");
+               */
+            var dots = svg.selectAll(".dot")
+               .data(data)
+               .enter()
+               .append("circle")
+               .attr("class","dot")
+               .attr("cx",function(d){
+                 if(var1=="NAx") {return x(d.NA_Sales)}
+                 else if(var1=="EUx") {return x(d.EU_Sales)}
+                 else if(var1=="JPx") {return x(d.JP_Sales)}
+                 else if(var1=="OTHx") {return x(d.Other_Sales)}
+                 else if(var1=="GLOx") {return x(d.Global_Sales)}
+                 else {console.log("hello my man")}
+               })
+               .attr("cy",function(d){
+                 if(var2=="NAy") {return y(d.NA_Sales)}
+                 else if(var2=="EUy") {return y(d.EU_Sales)}
+                 else if(var2=="JPy") {return y(d.JP_Sales)}
+                 else if(var2=="OTHy") {return y(d.Other_Sales)}
+                 else if(var2=="GLOy") {return y(d.Global_Sales)}
+                 else {console.log("Whats good")}
+               })
+               .attr("transform","translate(115,"+90+")")
+               .transition()
+               .ease(d3.easeLinear)
+               .duration(250)
+               .delay(function(d,i){return i * 2;})
+               .attr("fill","red")
+               .attr("r",5);
+
+               /*
+               var dots = svg.selectAll(".dot")
+                  .data(data)
+                  .enter()
+                  .append("circle")
+                  .attr("class","dot")
+                  .attr("cx",function(d){ return x(d.NA_Sales)})
+                  .attr("cy",function(d){return y(d.EU_Sales)})
+                  .attr("transform","translate(115,"+90+")")
+                  .attr("fill","red")
+                  .attr("r",5);
+                  */
+               /*bars.transition().duration(750);
+               bars.on("mouseover", onMouseOver).on("mouseout", onMouseOut);
+               */
+          })
+        }
+  </script>
+  </body>
+</html>
